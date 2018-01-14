@@ -26,6 +26,7 @@ rl.on("line", function(line) {
     // If the log entry starts with a "NULL", we note it in the object.
     // Strip any non-printable characters in the entry (assumes they start at [0]).
     // TODO: Update to search for any non-printables anywhere in the log entry.
+    // TODO: Qualify the read line to see if it is uncorrupted JSON and note if it isn't (second '{' for instance).
     if (/[\x00-\x08\x0E-\x1F\x80-\xFF]/.test(myString[0])) {
         // strip all the null's by creating a new string that doesn't contain any.
         let myCleanString = [];
