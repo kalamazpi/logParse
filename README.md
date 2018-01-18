@@ -15,3 +15,4 @@ Usage: logParse inputFileName [> outputFile]
 * Show whether a recipe was running (show times that the recipe was active and inactive?)
 * Show whether a recipe stopped running across a power cycle (state change across POR)
 * Count the number of unique record types (unique key groups, independent of values)
+* Filter on a specific record type and run statistics for all of the 'values' for each key in that record type (for example, to get stats on wifi signal strength or a supply voltage or current)
