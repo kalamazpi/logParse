@@ -9,7 +9,7 @@
             "request": "launch",
             "name": "Launch Program",
             "program": "${workspaceFolder}/logParse.js",
-            "args": ["tinylog.log"]
+            "args": ["out.log"]
         }
     ]
 }
