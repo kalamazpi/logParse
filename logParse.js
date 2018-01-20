@@ -16,7 +16,7 @@ let cols = 0;
 // count the header line.
 let lineNumber = 1;
 
-// TODO: Check for existence of file.
+// TODO: Check for existence of input file.
 // TODO: Add "usage" info if invoked with no parameters.
 
 // TODO: Add descriptive comments for this function.
