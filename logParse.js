@@ -81,7 +81,8 @@ rl.on("close", function() {
     // Build an array of logs that match the required filter criteria.
     // TODO: Update to handle nested objects in values.
     let logParams = [
-        "pcbTemp","temp1","temp2","bus60Voltage","bus60Current","bus12Voltage"
+        //"pcbTemp","temp1","temp2","bus60Voltage","bus60Current","bus12Voltage","faultCode","status"
+        "temperature"
     ];
     let count = 0;
     for (let i in logArray) {
