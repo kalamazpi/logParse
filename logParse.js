@@ -9,12 +9,26 @@ let outstream = new stream();
 let rl = readline.createInterface(instream, outstream);
 
 let logArray = [];
-logArray[0] = {};
 let mySignalNames = [];
-let cols = 0;
-// lineNumber is the line number of the incoming data file and doesn't
+
+// logFileLineNumber is the line number of the incoming data file and doesn't
 // count the header line.
-let lineNumber = 1;
+let logFileLineNumber = 1;
+
+//let logParams = [
+//    "pcbTemp","temp1","temp2","bus60Voltage","bus60Current","bus12Voltage"
+//];
+let logParams = [];
+let logFilters = [];
+
+if (process.argv[3].indexOf("-f") > -1) {
+    logFilters = process.argv[4].split(',');
+    logParams = [];
+} else if (process.argv[3].indexOf("-p") > -1) {
+    logFilters = process.argv[4].split(',');
+    logParams = logFilters;
+}
+
 
 // TODO: Check for existence of input file.
 // TODO: Add "usage" info if invoked with no parameters.
@@ -43,7 +57,7 @@ rl.on("line", function(line) {
         // TODO: wrap the following JSON.parse() around try/catch to detect corrupted JSON lines.
         tempLogObject = JSON.parse(myCleanString);
         tempLogObject.logIssue = "NULLs detected";
-        console.log("detected NULL at line ", lineNumber, "at time ", tempLogObject.time);
+        console.log("detected NULL at line ", logFileLineNumber, "at time ", tempLogObject.time);
         console.log("recovered object is: ", JSON.stringify(tempLogObject));
     } else {
         // Read all logs into the array
@@ -51,13 +65,25 @@ rl.on("line", function(line) {
         try {
             tempLogObject = JSON.parse(line);
         } catch (exception) {
+            // TODO: Try to extract 'time' key at least
             tempLogObject = {logIssue:"JSON corrupted", sourceLine:line};
-            console.log("detected JSON corruption at line ", lineNumber);
+            console.log("detected JSON corruption at line ", logFileLineNumber);
             console.log("source was: ", tempLogObject.sourceLine);
         }
     }
-    logArray[lineNumber] = tempLogObject;
-    lineNumber += 1;
+    // Check to see if this log entry contains filter values of interest. If so, store the entry, otherwise ignore.
+    // If there are no filters defined, include the log entry.
+    if (logFilters.length == 0)
+    {
+        logArray.push(tempLogObject);
+    } else {
+        for (let i in logFilters) {
+            if (line.indexOf(logFilters[i]) > -1) {
+                logArray.push(tempLogObject);
+            }
+        }
+    }
+    logFileLineNumber += 1;
 });
 
 // On file close, we process the array and perform the work of the program.
@@ -80,56 +106,76 @@ rl.on("close", function() {
 
     // Build an array of property values that match the required filter criteria.
     // TODO: Update to handle nested objects in values.
-    let logParams = [
-        "pcbTemp","temp1","temp2","bus60Voltage","bus60Current","bus12Voltage"
-    ];
-    let count = 0;
-    for (let i in logArray) {
-        // if the current value of logArray[i] finds any key in logParams,
-        // push it to outArray[], along with the value and time.  
-        for (let lfKey in logParams) {
-            // if logArray entry doesn't have the property or if it has the property but
-            // the value doesn't match, the filter test will fail.
-            if (logArray[i].hasOwnProperty(logParams[lfKey])) {
-                //record the key, the value, and the time
-                let tempOutArrayEntry = [];
-                tempOutArrayEntry[0] = logArray[i]["time"];
-                //tempOutArrayEntry[lfKey + 1] = logParams[lfKey];
-                tempOutArrayEntry[Number(lfKey) + 1] = logArray[i][logParams[lfKey]];
-                outArray.push(tempOutArrayEntry);
-                count++;
-            } else {
-                // now check any object values for the presence of the key (only 1 deep, not recursive)
-                // TODO: make this fully recursive
-                for (let laKey in logArray[i]) {
-                    if (typeof(logArray[i][laKey]) == "object") {
-                        if (logArray[i][laKey].hasOwnProperty(logParams[lfKey])) {
-                            //record the key, the value, and the time
-                            let tempOutArrayEntry = [];
-                            tempOutArrayEntry[0] = logArray[i]["time"];
-                            //tempOutArrayEntry[1] = logParams[lfKey];
-                            tempOutArrayEntry[Number(lfKey) + 1] = logArray[i][laKey][logParams[lfKey]];
-                            outArray.push(tempOutArrayEntry);
-                            count++;
+//    let logParams = [
+//        "pcbTemp","temp1","temp2","bus60Voltage","bus60Current","bus12Voltage"
+//    ];
+    if (logParams.length != 0) {
+        let count = 0;
+        for (let i in logArray) {
+            // if the current value of logArray[i] finds any key in logParams,
+            // push it to outArray[], along with the value and time.  
+            for (let lfKey in logParams) {
+                // if logArray entry doesn't have the property or if it has the property but
+                // the value doesn't match, the filter test will fail.
+                if (logArray[i].hasOwnProperty(logParams[lfKey])) {
+                    //record the key, the value, and the time
+                    let tempOutArrayEntry = [];
+                    tempOutArrayEntry[0] = logArray[i]["time"];
+                    //tempOutArrayEntry[lfKey + 1] = logParams[lfKey];
+                    tempOutArrayEntry[Number(lfKey) + 1] = logArray[i][logParams[lfKey]];
+                    outArray.push(tempOutArrayEntry);
+                    count++;
+                } else {
+                    // now check any object values for the presence of the key (only 1 deep, not recursive)
+                    // TODO: make this fully recursive
+                    for (let laKey in logArray[i]) {
+                        if (typeof(logArray[i][laKey]) == "object") {
+                            if (logArray[i][laKey].hasOwnProperty(logParams[lfKey])) {
+                                //record the key, the value, and the time
+                                let tempOutArrayEntry = [];
+                                tempOutArrayEntry[0] = logArray[i]["time"];
+                                //tempOutArrayEntry[1] = logParams[lfKey];
+                                tempOutArrayEntry[Number(lfKey) + 1] = logArray[i][laKey][logParams[lfKey]];
+                                outArray.push(tempOutArrayEntry);
+                                count++;
+                            }
                         }
                     }
                 }
             }
         }
-    }
-    let tempString = "Time, ";
-    for (i in logParams) {
-        tempString += logParams[i] + ", ";
-    }
-    console.log(tempString);
-    outArray.forEach((logEntry) => {
-        let date1 = new Date(logEntry[0]);
-        let tempString = date1.toISOString();
-        for (i = 1; i < logParams.length + 1; i += 1) {
-            tempString += ", "+ ((typeof(logEntry[i]) == "undefined")? "":logEntry[i]);
+        let tempString = "Time";
+        for (i in logParams) {
+            tempString += ", " + logParams[i];
         }
         console.log(tempString);
-    });
+        outArray.forEach((logEntry) => {
+            let date1 = new Date(logEntry[0]);
+            let tempString = date1.toISOString();
+            for (i = 1; i < logParams.length + 1; i += 1) {
+                // insert "" instead of 'undefined'
+                tempString += ", "+ ((typeof(logEntry[i]) == "undefined")? "":logEntry[i]);
+            }
+            console.log(tempString);
+        });
+        console.log("Found " + count + " occurrences of keys");
+    } else {
+        logArray.forEach((logEntry) => {
+            let tempString = "";
+            // Insert dummy date for log lines that had issues
+            if (logEntry.hasOwnProperty('time')) {
+                let date1 = new Date(logEntry.time);
+                tempString = date1.toISOString() + ",";
+                tempString += JSON.stringify(logEntry);
+            } else {
+                let date1 = new Date("2000-01-01T00:00:00.000Z");
+                tempString = date1.toISOString() + ",";
+                tempString += JSON.stringify(logEntry);
+                }
+            console.log(tempString);
+        });
+    }
+
 
 /*
     let timeArray = [];
@@ -142,8 +188,10 @@ rl.on("close", function() {
         console.log(outArray[logEntry].time + ", " + delta_ms / 1000);
     }
 */
-    console.log("Found " + count + " occurrences of keys");
-    console.log("Total number of log records processed was ", logArray.length);
+    console.log("Filter values are: ", logFilters);
+    console.log("Parameter values are: ", logParams);
+    console.log("Total number of log records that passed filter was ", logArray.length);
+    console.log("Total number of log records read was ", logFileLineNumber);
     //console.log(logArray);
     rl.close();
 });
