@@ -21,6 +21,7 @@ let logFileLineNumber = 1;
 let logParams = [];
 let logFilters = [];
 
+//TODO: Please clean this up!
 if (process.argv[3].indexOf("-f") > -1) {
     logFilters = process.argv[4].split(',');
     if (process.argv.length > 6) { //check this limit
@@ -73,10 +74,62 @@ rl.on("line", function(line) {
         try {
             tempLogObject = JSON.parse(line);
         } catch (exception) {
-            // TODO: Try to extract 'time' key at least
-            tempLogObject = {time:"2000-01-01T00:00:00.000Z",logIssue:"JSON corrupted", sourceLine:line};
-            console.log("detected JSON corruption at line ", logFileLineNumber);
-            console.log("source was: ", tempLogObject.sourceLine);
+            // The goal is to find the largest set of matching braces, favoring the end of the line, and
+            // see if we can construct a valid JSON object from it.  Otherwise, abort (or try to grab
+            // time and then abort).  Note that we are assuming that the 'valid' data is at the end of
+            // the string.
+            // Try to recover the data at the beginning of the string as a short corrupted object.
+            // Method: 
+            // 1. Count the number of closing '}' in the string.  Call it 'closingCount'.
+            // 2. Counting from the end of the string, find the number of the matching '{', which will
+            // be the one that is the 'closingCount-th' one from the end.  For example:
+            // {..{..{.....{...}.....}....}
+            //    {..{.....{...}.....}....}
+            // There are 7 total brackets.  There are 3 '}' brackets.  We want to find the 3rd '{' from
+            // the end and use that as our first '{'.
+            //    {..{.....{...}.....}....}
+            // First, count the '}'
+            let myString = line.split("");
+            let closingCount = 0;
+            let startingCount = 0; // 'startingCount' will be the index in myString where the '{' we want is located.
+            for (let c = 0; c < myString.length; c += 1) {
+                let testChar = myString[c];
+                if (/[}]/.test(testChar)) {
+                    closingCount++;
+                } else {
+                    // do nothing
+                }
+            }
+            // 'closingCount' contains the number of '}' found.  Now we need to find the 'closingCount-th'
+            // '{' from the end of the string.
+            for (let c = myString.length - 1; c >= 0; c -= 1) {
+                let testChar = myString[c];
+                if (/[{]/.test(testChar)) {
+                    closingCount--;
+                    if (closingCount == 0) {
+                        startingCount = c;
+                        break;
+                    }
+                }
+            }
+            // Now create a new string starting from 'startingCount' and continuing to the end of the string.
+            // TODO: Terminate at last '}' instead of last character in string.
+            let myCleanString = [];
+            for (let c = startingCount; c < myString.length; c++) {
+                myCleanString.push(myString[c]);
+            }
+            // rejoin into a string array
+            myCleanString = myCleanString.join('');
+            // try to make a JSON object out of it.
+            try {
+                tempLogObject = JSON.parse(myCleanString);
+                tempLogObject.logIssue = "JSON corrupted";
+            } catch (exception) {
+                // TODO: try to extract 'time' key value at least
+                tempLogObject = {time:"2000-01-01T00:00:00.000Z",logIssue:"JSON corrupted", sourceLine:line};
+                console.log("detected JSON corruption at line ", logFileLineNumber);
+                console.log("source was: ", tempLogObject.sourceLine);
+            }
         }
     }
     // Check to see if this log entry contains filter values of interest. If so, store the entry, otherwise ignore.
