@@ -97,60 +97,38 @@ rl.on("line", function(line) {
 // On file close, we process the array and perform the work of the program.
 rl.on("close", function() {
     let outArray = []; // output logArray matching criteria
-    /*
-    let myLogTypes = [];
-    for (let i = 0; i < logArray.length; i += 1) {
-        //console.log("current log entry is: ", JSON.stringify(logArray[i]));
-        let currentLogKeys = JSON.stringify(Object.keys(logArray[i]).sort());
-        //console.log("current log sorted keys are: ", currentLogKeys);
-        if (myLogTypes.indexOf(currentLogKeys) > -1) {
-            // currentLog is already mapped
-        } else {
-            // add the currentLog to the set
-            myLogTypes.push(currentLogKeys);
-        }
-    }
-    */
-
     // Build an array of property values that match the required filter criteria.
-    // TODO: Update to handle nested objects in values.
-//    let logParams = [
-//        "pcbTemp","temp1","temp2","bus60Voltage","bus60Current","bus12Voltage"
-//    ];
+    // TODO: Update to handle recursively nested objects in values.
     if (logParams.length != 0) {
         let count = 0;
         for (let i in logArray) {
             // if the current value of logArray[i] finds any key in logParams,
             // push it to outArray[], along with the value and time.  
+            let tempOutArrayEntry = [];
+            tempOutArrayEntry[0] = logArray[i]["time"];
             for (let lfKey in logParams) {
                 // if logArray entry doesn't have the property or if it has the property but
                 // the value doesn't match, the filter test will fail.
                 if (logArray[i].hasOwnProperty(logParams[lfKey])) {
-                    //record the key, the value, and the time
-                    let tempOutArrayEntry = [];
-                    tempOutArrayEntry[0] = logArray[i]["time"];
                     //tempOutArrayEntry[lfKey + 1] = logParams[lfKey];
                     tempOutArrayEntry[Number(lfKey) + 1] = logArray[i][logParams[lfKey]];
-                    outArray.push(tempOutArrayEntry);
-                    count++;
                 } else {
                     // now check any object values for the presence of the key (only 1 deep, not recursive)
                     // TODO: make this fully recursive
+                    // TODO: currently any key collisions found between the logArray[i] object and a logArray[i] sub object
+                    //  will result in the logArray[i] object key being overwritten.
                     for (let laKey in logArray[i]) {
                         if (typeof(logArray[i][laKey]) == "object") {
                             if (logArray[i][laKey].hasOwnProperty(logParams[lfKey])) {
-                                //record the key, the value, and the time
-                                let tempOutArrayEntry = [];
-                                tempOutArrayEntry[0] = logArray[i]["time"];
                                 //tempOutArrayEntry[1] = logParams[lfKey];
                                 tempOutArrayEntry[Number(lfKey) + 1] = logArray[i][laKey][logParams[lfKey]];
-                                outArray.push(tempOutArrayEntry);
-                                count++;
                             }
                         }
                     }
                 }
             }
+            outArray.push(tempOutArrayEntry);
+            count++; // TODO: rename this variable to be more descriptive.
         }
         let tempString = "Time";
         for (i in logParams) {
@@ -161,7 +139,7 @@ rl.on("close", function() {
             let date1 = new Date(logEntry[0]);
             let tempString = date1.toISOString();
             for (i = 1; i < logParams.length + 1; i += 1) {
-                // insert "" instead of 'undefined'
+                // insert "" instead of 'undefined' in log output
                 tempString += ", "+ ((typeof(logEntry[i]) == "undefined")? "":logEntry[i]);
             }
             console.log(tempString);

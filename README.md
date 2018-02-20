@@ -4,7 +4,7 @@ JS file for parsing and decoding Luminaire log files
 Usage: node logParse inputFileName [-p paramList || -f filterList] [> outputFile]
 example: node logParse out.log.1 -p pcbTemp,temp1,temp2 >out.log.1.csv
 example: node logParse out.log -f "SET_AC_PRESENT,development env" >out.log
-example: node logParse out.log -f "SET_AC_PRESENT" -p "payload" >out.log (not implemented yet, but support this next)
+example: node logParse out.log -f "SET_AC_PRESENT,development env" -p "msg,payload,logIssue,sourceLine" >out.log
 
 For parameters, add an additional column for "filter or parameter present indicator" in addition to column for parameter value
 
