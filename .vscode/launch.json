@@ -9,7 +9,7 @@
             "request": "launch",
             "name": "Launch Program",
             "program": "${workspaceFolder}/logParse.js",
-            "args": ["out.log","-f","SET_AC_PRESENT,development env"]
+            "args": ["out.log","-f","SET_AC_PRESENT,development env","-p","msg,payload,logIssue,sourceLine"]
         }
     ]
 }

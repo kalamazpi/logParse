@@ -23,7 +23,15 @@ let logFilters = [];
 
 if (process.argv[3].indexOf("-f") > -1) {
     logFilters = process.argv[4].split(',');
-    logParams = [];
+    if (process.argv.length > 6) { //check this limit
+        if (process.argv[5].indexOf("-p") > -1) {
+            logParams = process.argv[6].split(',');
+        } else {
+            logParams = [];
+        }
+    } else {
+        logParams = [];
+    }
 } else if (process.argv[3].indexOf("-p") > -1) {
     logFilters = process.argv[4].split(',');
     logParams = logFilters;
@@ -66,7 +74,7 @@ rl.on("line", function(line) {
             tempLogObject = JSON.parse(line);
         } catch (exception) {
             // TODO: Try to extract 'time' key at least
-            tempLogObject = {logIssue:"JSON corrupted", sourceLine:line};
+            tempLogObject = {time:"2000-01-01T00:00:00.000Z",logIssue:"JSON corrupted", sourceLine:line};
             console.log("detected JSON corruption at line ", logFileLineNumber);
             console.log("source was: ", tempLogObject.sourceLine);
         }
