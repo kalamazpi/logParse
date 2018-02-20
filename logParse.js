@@ -83,6 +83,35 @@ rl.on("line", function(line) {
             // 1. Start at the end of the string and increment a counter for each '}' and decrement the
             //  counter for each '{' -- stop at zero.  That is the start of the string to parse.
             
+/*
+The following is Brad Stewart's implementation, which is similar and more elegantly constructed.
+He also uses 'input.charAt()' instead of breaking the string into a character array, and also uses
+'slice' to grab the substring.
+
+function findJSON (input: string) {
+  // In case the string has line-endings, whitespace, or other stuff at the end.
+  const end = input.lastIndexOf('}')
+  // Count matching pairs of { and }
+  let stack = 0
+
+  for (let i = end; i >= 0; i--) {
+    switch (input.charAt(i)) {
+      case '}':
+        stack++
+        break
+      case '{':
+        stack--
+        break
+    }
+    if (stack === 0) {
+      return input.slice(i, end + 1)
+    }
+  }
+
+  throw new Error('No JSON object found.')
+}
+*/
+
             let myString = line.split("");
             let closingCount = 0;
             let startingIndex = 0; // 'startingCount' will be the index in myString where the '{' we want is located.
