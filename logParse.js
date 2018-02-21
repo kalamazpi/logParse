@@ -85,8 +85,8 @@ rl.on("line", function(line) {
             
 /*
 The following is Brad Stewart's implementation, which is similar and more elegantly constructed.
-He also uses 'input.charAt()' instead of breaking the string into a character array, and also uses
-'slice' to grab the substring.
+He also uses 'input.charAt()' instead of splitting the string into a character array, and also uses
+'slice' to grab the substring instead of constructing in manually.
 
 function findJSON (input: string) {
   // In case the string has line-endings, whitespace, or other stuff at the end.
