@@ -7,9 +7,16 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "Launch Program",
+            "name": "Launch power cycle",
             "program": "${workspaceFolder}/logParse.js",
             "args": ["out.log","-f","SET_AC_PRESENT,development env","-p","msg,payload,logIssue,sourceLine"]
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch recipe vars",
+            "program": "${workspaceFolder}/logParse.js",
+            "args": ["out.log","-p","pcbtemp,temp1,temp2,bus60Current,bus60Voltage", ">out.log.csv"]
         }
     ]
 }

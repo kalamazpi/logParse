@@ -34,8 +34,8 @@ if (process.argv[3].indexOf("-f") > -1) {
         logParams = [];
     }
 } else if (process.argv[3].indexOf("-p") > -1) {
-    logFilters = process.argv[4].split(',');
-    logParams = logFilters;
+    logParams = process.argv[4].split(',');
+    logFilters = logParams.slice();
 }
 
 
@@ -207,11 +207,21 @@ rl.on("close", function() {
         outArray.forEach((logEntry) => {
             let date1 = new Date(logEntry[0]);
             let tempString = date1.toISOString();
+            // 'paramPresent' is used to signal that there's something interesting in this record that should be output.
+            // This prevents output records that are only a time index.
+            let paramPresent = false;
             for (i = 1; i < logParams.length + 1; i += 1) {
                 // insert "" instead of 'undefined' in log output
-                tempString += ", "+ ((typeof(logEntry[i]) == "undefined")? "":logEntry[i]);
+                if (typeof(logEntry[i]) == "undefined") {
+                    tempString += ", ";
+                } else {
+                    tempString += ", " + logEntry[i];
+                    paramPresent = true;
+                }
             }
-            console.log(tempString);
+            if (paramPresent == true) {
+                console.log(tempString);
+            }
         });
         console.log("Found " + count + " occurrences of keys");
     } else {
