@@ -2,7 +2,7 @@
 JS file for parsing and decoding Luminaire log files
 
 Usage: node logParse inputFileName [-p paramList || -f filterList] [> outputFile]
-example: node logParse out.log.1 -p pcbTemp,temp1,temp2 >out.log.1.csv
+example: node logParse out.log.1 -p pcbTemp,temp1,temp2,bus60Current,bus60Voltage,bus12Voltage,but5VPICVoltage,bus5BBVoltage,bus5SystemVoltage >out.log.1.csv
 example: node logParse out.log -f "SET_AC_PRESENT,development env" >out.log
 example: node logParse out.log -f "SET_AC_PRESENT,development env" -p "msg,payload,logIssue,sourceLine" >out.log
 
